@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+.env
+
+# Dependency Management
+*.egg-info/
+dist/
+build/
+
+# Logs and Databases
+*.log
+*.sqlite3
+
+# IDEs and Editors
+.vscode/
+.idea/
+
+# OS and Miscellaneous
+.DS_Store
+Thumbs.db
+
+# Uploaded files (if applicable)
+uploads/
