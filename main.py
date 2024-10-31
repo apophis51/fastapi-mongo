@@ -50,7 +50,7 @@ class Blog(BaseModel):
     BlogType: str
     MarkdownContent: str
 
-
+# Route to retrieve all blog posts
 @app.get("/api/get-all-blogs")
 async def get_all_blogs():
     # Find all blogs in the collection
@@ -69,7 +69,7 @@ async def get_all_blogs():
     return response
 
 # Route to create a new blog post
-@app.post("/api/blog")
+@app.post("/api/add-blog")
 async def add_blog(blog: Blog):
     # Create a new blog document
     new_blog = {
@@ -83,22 +83,6 @@ async def add_blog(blog: Blog):
 
     # Return a success response with the blog ID
     return {"message": "Blog added", "id": str(result.inserted_id)}
-
-# Route to retrieve all blog posts
-@app.get("/api/blogs")
-async def get_blogs():
-    blogs_cursor = blogs_collection.find()
-    blogs = await blogs_cursor.to_list(length=None)
-
-    response = []
-    for blog in blogs:
-        response.append({
-            "id": str(blog["_id"]),
-            "Title": blog["Title"],
-            "BlogType": blog["BlogType"],
-            "MarkdownContent": blog["MarkdownContent"]
-        })
-    return response
 
 
 
