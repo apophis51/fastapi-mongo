@@ -6,7 +6,7 @@
 
 
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorClient #for database routes
 from pydantic import BaseModel
 from bson import ObjectId
@@ -67,6 +67,18 @@ async def get_all_blogs():
             "MarkdownContent": blog["MarkdownContent"]
         })
     return response
+
+@app.delete("/api/delete-blog/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_blog(blog_id: str):
+    """Delete a blog post by its ID."""
+
+    result = await blogs_collection.delete_one({"_id": ObjectId(blog_id)})
+
+    if result.deleted_count == 1:
+        return  # Return 204 No Content on successful deletion
+    else:
+        raise HTTPException(status_code=404, detail=f"Blog with id {blog_id} not found") 
+
 
 # Route to create a new blog post
 @app.post("/api/add-blog")
