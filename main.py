@@ -96,7 +96,27 @@ async def add_blog(blog: Blog):
     # Return a success response with the blog ID
     return {"message": "Blog added", "id": str(result.inserted_id)}
 
+class UpdateBlogContentRequest(BaseModel):
+    markdown_content: str
 
+@app.patch("/api/update-blog-content/{blog_id}")
+async def update_blog_content(blog_id: str, payload: UpdateBlogContentRequest):
+    # Use the markdown_content from the request body
+    update_document = {
+        "$set": {
+            "MarkdownContent": payload.markdown_content
+        }
+    }
+
+    # Update the blog in the MongoDB collection
+    result = await blogs_collection.update_one({"_id": ObjectId(blog_id)}, update_document)
+
+    # Check if a document was updated
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Blog not found")
+
+    # Return a success response
+    return {"message": "Markdown content updated successfully"}
 
 # Define the user model for creating a new user
 class UserCreate(BaseModel):
