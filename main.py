@@ -8,11 +8,13 @@
 
 from fastapi import FastAPI, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorClient #for database routes
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, IPvAnyAddress
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
+from pymongo import ReturnDocument
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -50,7 +52,35 @@ class Blog(BaseModel):
     BlogType: str
     MarkdownContent: str
 
+
+# Define the Pydantic models
+
+class IPRequest(BaseModel):
+    ip_address: IPvAnyAddress = Field(..., description="The IP address of the requester")
+    request_count: int = Field(default=0, description="Total number of requests from this IP")
+
+class IPRequestResponse(BaseModel):
+    ip_address: IPvAnyAddress
+    request_count: int
+
 # Route to retrieve all blog posts
+
+@app.get("/requests/{ip_address}", response_model=IPRequestResponse)
+async def get_requests(ip_address: str):
+    # Try to find the document and either update the count or create it
+    result = await collection.find_one_and_update(
+        {"ip_address": ip_address},
+        {"$inc": {"request_count": 1}},  # Increment the count by 1
+        upsert=True,  # Create if not found
+        return_document=ReturnDocument.AFTER  # Return the document after update
+    )
+    
+    # Return the response
+    return IPRequestResponse(
+        ip_address=result["ip_address"],
+        request_count=result.get("request_count", 0)  # Get the updated count
+    )
+
 @app.get("/api/get-all-blogs")
 async def get_all_blogs():
     # Find all blogs in the collection
