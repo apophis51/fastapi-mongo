@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 from pymongo import ReturnDocument
+from datetime import datetime, timedelta
 
 
 # Load environment variables from .env file
@@ -66,17 +67,46 @@ class IPRequestResponse(BaseModel):
 # Route to retrieve all blog posts
 
 # Route to retrieve or create an IP entry with a request_count of 0
+from datetime import datetime, timedelta
+
+from datetime import datetime, timedelta
+
 @app.get("/requests/no-increment/{ip_address}", response_model=IPRequestResponse)
 async def get_or_create_no_increment(ip_address: str):
-    result = await collection.find_one_and_update(
-        {"ip_address": ip_address},
-        {"$setOnInsert": {"ip_address": ip_address, "request_count": 0}},  # Only set if inserting
-        upsert=True,
-        return_document=ReturnDocument.AFTER,
-    )
+    now = datetime.utcnow()
+
+    # Try to find the document first
+    result = await collection.find_one({"ip_address": ip_address})
+
     if result:
-        return {"ip_address": result["ip_address"], "request_count": result["request_count"]}
-    raise HTTPException(status_code=500, detail="Failed to retrieve or create IP entry")
+        # Check if 24 hours have passed since last_updated
+        last_updated = result.get("last_updated", now)
+        if (now - last_updated) > timedelta(hours=24):
+            # Reset request_count to 0 and update last_updated
+            result = await collection.find_one_and_update(
+                {"ip_address": ip_address},
+                {"$set": {"request_count": 0, "last_updated": now}},
+                return_document=ReturnDocument.AFTER,
+            )
+    else:
+        # If document doesn't exist, create it
+        result = await collection.insert_one({
+            "ip_address": ip_address,
+            "request_count": 0,
+            "last_updated": now
+        })
+        # Fetch the created document
+        result = await collection.find_one({"_id": result.inserted_id})
+
+    if result:
+        return {
+            "ip_address": result["ip_address"],
+            "request_count": result["request_count"],
+        }
+    raise HTTPException(
+        status_code=500, detail="Failed to retrieve or create IP entry"
+    )
+
 
 
 # Route to retrieve or create an IP entry and increment the count
