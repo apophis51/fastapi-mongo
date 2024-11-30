@@ -141,6 +141,7 @@ async def reset_request_count(ip_address: str):
         status_code=404, detail=f"No entry found for IP address {ip_address}"
     )
 
+@app.get("/api/get-all-blogs")
 async def get_all_blogs():
     # Find all blogs in the collection
     blogs_cursor = blogs_collection.find()
