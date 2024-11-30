@@ -65,38 +65,51 @@ class IPRequestResponse(BaseModel):
 
 # Route to retrieve all blog posts
 
-@app.get("/requests/{ip_address}", response_model=IPRequestResponse)
-async def get_requests(ip_address: str):
-    # Try to find the document and either update the count or create it
+# Route to retrieve or create an IP entry with a request_count of 0
+@app.get("/requests/no-increment/{ip_address}", response_model=IPRequestResponse)
+async def get_or_create_no_increment(ip_address: str):
     result = await collection.find_one_and_update(
         {"ip_address": ip_address},
-        {"$inc": {"request_count": 1}},  # Increment the count by 1
-        upsert=True,  # Create if not found
-        return_document=ReturnDocument.AFTER  # Return the document after update
+        {"$setOnInsert": {"ip_address": ip_address, "request_count": 0}},  # Only set if inserting
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
     )
-    
-    # Return the response
-    return IPRequestResponse(
-        ip_address=result["ip_address"],
-        request_count=result.get("request_count", 0)  # Get the updated count
+    if result:
+        return {"ip_address": result["ip_address"], "request_count": result["request_count"]}
+    raise HTTPException(status_code=500, detail="Failed to retrieve or create IP entry")
+
+
+# Route to retrieve or create an IP entry and increment the count
+@app.get("/requests/increment/{ip_address}", response_model=IPRequestResponse)
+async def get_or_create_and_increment(ip_address: str):
+    result = await collection.find_one_and_update(
+        {"ip_address": ip_address},
+        {
+            "$inc": {"request_count": 1},  # Increment the count by 1
+            "$setOnInsert": {"ip_address": ip_address},  # Set on insert only
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
     )
+    if result:
+        return {"ip_address": result["ip_address"], "request_count": result["request_count"]}
+    raise HTTPException(status_code=500, detail="Failed to retrieve or increment IP entry")
 
-@app.get("/api/get-all-blogs")
-async def get_all_blogs():
-    # Find all blogs in the collection
-    blogs_cursor = blogs_collection.find()
-    blogs = await blogs_cursor.to_list(length=None)
 
-    # Format and return the response
-    response = []
-    for blog in blogs:
-        response.append({
-            "id": str(blog["_id"]),
-            "Title": blog["Title"],
-            "BlogType": blog["BlogType"],
-            "MarkdownContent": blog["MarkdownContent"]
-        })
-    return response
+
+# Route to reset the request count for an IP address to zero
+@app.post("/requests/reset/{ip_address}", response_model=IPRequestResponse)
+async def reset_request_count(ip_address: str):
+    result = await collection.find_one_and_update(
+        {"ip_address": ip_address},
+        {"$set": {"request_count": 0}},  # Reset the count to 0
+        return_document=ReturnDocument.AFTER,
+    )
+    if result:
+        return {"ip_address": result["ip_address"], "request_count": result["request_count"]}
+    raise HTTPException(
+        status_code=404, detail=f"No entry found for IP address {ip_address}"
+    )
 
 @app.delete("/api/delete-blog/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_blog(blog_id: str):
