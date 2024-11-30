@@ -141,6 +141,22 @@ async def reset_request_count(ip_address: str):
         status_code=404, detail=f"No entry found for IP address {ip_address}"
     )
 
+async def get_all_blogs():
+    # Find all blogs in the collection
+    blogs_cursor = blogs_collection.find()
+    blogs = await blogs_cursor.to_list(length=None)
+
+    # Format and return the response
+    response = []
+    for blog in blogs:
+        response.append({
+            "id": str(blog["_id"]),
+            "Title": blog["Title"],
+            "BlogType": blog["BlogType"],
+            "MarkdownContent": blog["MarkdownContent"]
+        })
+    return response
+
 @app.delete("/api/delete-blog/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_blog(blog_id: str):
     """Delete a blog post by its ID."""
