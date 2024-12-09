@@ -154,8 +154,11 @@ async def get_all_blogs():
             "id": str(blog["_id"]),
             "Title": blog["Title"],
             "BlogType": blog["BlogType"],
-            "MarkdownContent": blog["MarkdownContent"]
+            "MarkdownContent": blog["MarkdownContent"],
         })
+        if blog.get("Description") is not None:
+            response.append({"Description": blog["Description"]})
+        
     return response
 
 @app.delete("/api/delete-blog/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -188,19 +191,23 @@ async def add_blog(blog: Blog):
 
 class UpdateBlogContentRequest(BaseModel):
     markdown_content: str
+    title: str
+    description: str
 
 @app.patch("/api/update-blog-content/{blog_id}")
 async def update_blog_content(blog_id: str, payload: UpdateBlogContentRequest):
     # Use the markdown_content from the request body
     update_document = {
         "$set": {
-            "MarkdownContent": payload.markdown_content
+            "MarkdownContent": payload.markdown_content,
+            "Title": payload.title,
+            "Description": payload.description
         }
     }
 
     # Update the blog in the MongoDB collection
     result = await blogs_collection.update_one({"_id": ObjectId(blog_id)}, update_document)
-
+    
     # Check if a document was updated
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Blog not found")
