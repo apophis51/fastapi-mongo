@@ -155,9 +155,9 @@ async def get_all_blogs():
             "Title": blog["Title"],
             "BlogType": blog["BlogType"],
             "MarkdownContent": blog["MarkdownContent"],
+            "Description": blog.get("Description", "No Description")
         })
-        if blog.get("Description") is not None:
-            response.append({"Description": blog["Description"]})
+
         
     return response
 
