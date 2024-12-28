@@ -155,7 +155,8 @@ async def get_all_blogs():
             "Title": blog["Title"],
             "BlogType": blog["BlogType"],
             "MarkdownContent": blog["MarkdownContent"],
-            "Description": blog.get("Description", "No Description")
+            "Description": blog.get("Description", "No Description"),
+            "DocURL": blog.get("DocURL", "No URL")
         })
 
         
@@ -193,6 +194,7 @@ class UpdateBlogContentRequest(BaseModel):
     markdown_content: str
     title: str
     description: str
+    docURL: str
 
 @app.patch("/api/update-blog-content/{blog_id}")
 async def update_blog_content(blog_id: str, payload: UpdateBlogContentRequest):
@@ -201,7 +203,8 @@ async def update_blog_content(blog_id: str, payload: UpdateBlogContentRequest):
         "$set": {
             "MarkdownContent": payload.markdown_content,
             "Title": payload.title,
-            "Description": payload.description
+            "Description": payload.description,
+            "DocURL": payload.docURL
         }
     }
 
