@@ -45,7 +45,7 @@ app.add_middleware(
 client = AsyncIOMotorClient(MONGODB_CONNECTION_URL)
 db = client['Next_JS_Portfolio']
 collection = db['mycollection']
-blogs_collection = db['AI_Blogs']
+blogs_collection = db['Next_Content']
 
 # Pydantic model for input validation
 class Blog(BaseModel):
