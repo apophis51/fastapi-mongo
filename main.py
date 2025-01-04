@@ -157,7 +157,9 @@ async def get_all_blogs():
             "MarkdownContent": blog["MarkdownContent"],
             "Description": blog.get("Description", "No Description"),
             "DocURL": blog.get("DocURL", "No URL"),
-            "Deployed": blog.get("Deployed", False)
+            "Deployed": blog.get("Deployed", False),
+            "ContentType": blog.get("ContentType", "No Content Type"),
+            "Category": blog.get("Category", "No Category")
         })
 
         
@@ -197,11 +199,13 @@ class UpdateBlogContentRequest(BaseModel):
     description: str
     docURL: str
     deployed: bool
-    blogType: str
+    contentType: str
+    category: str
 
 @app.patch("/api/update-blog-content/{blog_id}")
 async def update_blog_content(blog_id: str, payload: UpdateBlogContentRequest):
     # Use the markdown_content from the request body
+    print(payload)
     update_document = {
         "$set": {
             "MarkdownContent": payload.markdown_content,
@@ -209,7 +213,8 @@ async def update_blog_content(blog_id: str, payload: UpdateBlogContentRequest):
             "Description": payload.description,
             "DocURL": payload.docURL,
             "Deployed": payload.deployed,
-            "BlogType": payload.blogType
+            "ContentType": payload.contentType,
+            "Category": payload.category
         }
     }
 
