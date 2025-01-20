@@ -54,6 +54,7 @@ class Blog(BaseModel):
     ClerkID: str
     ContentType: str
     Category: str
+    BlogType: str
 
 
 # Define the Pydantic models
@@ -188,7 +189,8 @@ async def add_blog(blog: Blog):
         "MarkdownContent": blog.MarkdownContent,
         "ClerkID": blog.ClerkID,
         "ContentType": blog.ContentType,
-        "Category": blog.Category
+        "Category": blog.Category,
+        "BlogType": blog.BlogType
     }
 
     # Insert the blog into the MongoDB collection
