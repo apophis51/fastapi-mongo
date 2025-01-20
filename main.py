@@ -50,9 +50,10 @@ blogs_collection = db['Next_Content']
 # Pydantic model for input validation
 class Blog(BaseModel):
     Title: str
-    BlogType: str
     MarkdownContent: str
     ClerkID: str
+    ContentType: str
+    Category: str
 
 
 # Define the Pydantic models
@@ -184,9 +185,10 @@ async def add_blog(blog: Blog):
     # Create a new blog document
     new_blog = {
         "Title": blog.Title,
-        "BlogType": blog.BlogType,
         "MarkdownContent": blog.MarkdownContent,
-        "ClerkID": blog.ClerkID
+        "ClerkID": blog.ClerkID,
+        "ContentType": blog.ContentType,
+        "Category": blog.Category
     }
 
     # Insert the blog into the MongoDB collection
